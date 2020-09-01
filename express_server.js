@@ -14,7 +14,14 @@ app.get("/", (req, res) => {
 });
 
 app.get("/urls", (req, res) => {
-  res.render("urls_index", {urls: urlDatabase})
+  res.render("urls_index", { urls: urlDatabase })
+});
+app.get("/urls/:shortURL", (req, res) => {
+  res.render("urls_show",
+    {
+      shortURL: req.params.shortURL,
+      longURL: urlDatabase[req.params.shortURL],
+    })
 });
 
 app.get("/hello", (req, res) => {
