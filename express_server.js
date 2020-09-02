@@ -20,8 +20,8 @@ function generateRandomString() {
 
 
 const urlDatabase = {
-  "b2xVn2": "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com"
+  "b2xVn2": {longURL: "http://www.lighthouselabs.ca", userID: "testuser1"},
+  "9sm5xK": {longURL: "http://www.google.com", userID: "testuser2"}
 };
 
 const users = {
@@ -71,24 +71,23 @@ app.post("/register", (req, res) => {
 })
 
 app.post("/urls", (req, res) => {
-  console.log(req.body);  // Log the POST request body to the console
+  console.log(urlDatabase)
   let shortURL = generateRandomString();
-  urlDatabase[shortURL] = req.body.longURL;
+  const userID = req.cookies["user_id"];
+  urlDatabase[shortURL] = {longURL: req.body.longURL, userID};
   res.redirect(`/urls/${shortURL}`)
+  console.log(urlDatabase)
 });
 
 app.post("/urls/:shortURL/delete", (req, res) => {
-  console.log(urlDatabase)
   delete urlDatabase[req.params.shortURL]
   res.redirect('/urls')
-  console.log(urlDatabase)
 })
 
 app.post("/urls/:id", (req, res) => {
-  console.log(urlDatabase)
-  let id = req.params.id;
-  urlDatabase[id] = req.body.longURL;
-  console.log(urlDatabase)
+  const userID = req.cookies["user_id"];
+  const urlID = req.params.id;
+  urlDatabase[urlID] = {longURL: req.body.longURL, userID};
 })
 
 app.post("/login", (req, res) => {
@@ -128,11 +127,15 @@ app.get("/urls", (req, res) => {
 
 app.get("/urls/new", (req, res) => {
   const user_id = req.cookies["user_id"];
+  if(!user_id){
+    return res.render("login", { user: null })
+  }
   res.render("urls_new", { user: users[user_id] })
 });
 
 app.get("/u/:shortURL", (req, res) => {
-  const longURL = urlDatabase[req.params.shortURL];
+  const longURL = urlDatabase[req.params.shortURL].longURL;
+  console.group(longURL)
   res.redirect(longURL);
 });
 
@@ -141,7 +144,7 @@ app.get("/urls/:shortURL", (req, res) => {
   res.render("urls_show",
     {
       shortURL: req.params.shortURL,
-      longURL: urlDatabase[req.params.shortURL],
+      longURL: urlDatabase[req.params.shortURL].longURL,
       user: users[user_id]
     })
 });
