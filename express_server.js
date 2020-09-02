@@ -37,10 +37,10 @@ const users = {
   }
 }
 
-const emailAlreadyExists = (email) => {
+const findUserIdByEmail = (email) => {
   for (userId in users) {
     if (users[userId].email === email) {
-      return true;
+      return userId;
     }
   }
   return false;
@@ -54,7 +54,7 @@ app.post("/register", (req, res) => {
     return res.status(400).send("empty email or password field")
   }
 
-  if (emailAlreadyExists(email)) {
+  if (findUserIdByEmail(email)) {
     return res.status(400).send("email already registered")
   }
 
@@ -92,18 +92,29 @@ app.post("/urls/:id", (req, res) => {
 })
 
 app.post("/login", (req, res) => {
-  let userName = req.body.username;
-  res.cookie("username", userName);
+  const { email, password } = req.body
+  const userId = findUserIdByEmail(email);
+  if(!userId){
+    return res.status(403).send("Invalid credentials")
+  }
+  if(users[userId].password !== password){
+    return res.status(403).send("Invalid credentials")
+  }
+  res.cookie("user_id", userId);
   res.redirect('/urls')
 })
 
 app.post("/logout", (req, res) => {
-  res.clearCookie('username')
+  res.clearCookie('user_id')
   res.redirect('/urls')
 })
 
+app.get("/login", (req, res) => {
+  res.render("login", { user: null })
+})
+
 app.get("/register", (req, res) => {
-  res.render("registration")
+  res.render("registration", { user: null })
 })
 
 app.get("/", (req, res) => {
