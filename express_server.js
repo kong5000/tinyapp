@@ -24,7 +24,33 @@ const urlDatabase = {
   "9sm5xK": "http://www.google.com"
 };
 
+const users = { 
+  "userRandomID": {
+    id: "userRandomID", 
+    email: "user@example.com", 
+    password: "purple-monkey-dinosaur"
+  },
+ "user2RandomID": {
+    id: "user2RandomID", 
+    email: "user2@example.com", 
+    password: "dishwasher-funk"
+  }
+}
+
 app.set("view engine", "ejs")
+
+app.post("/register", (req, res) => {
+  const {email, password} = req.body;
+  const id = generateRandomString();
+  const newUser = {
+    id,
+    email,
+    password
+  }
+  users[id] = newUser
+  res.cookie("user_id", id)
+  res.redirect("/urls")
+})
 
 app.post("/urls", (req, res) => {
   console.log(req.body);  // Log the POST request body to the console
@@ -67,13 +93,13 @@ app.get("/", (req, res) => {
 });
 
 app.get("/urls", (req, res) => {
-  let username = req.cookies["username"];
-  res.render("urls_index", { urls: urlDatabase, username })
+  const user_id = req.cookies["user_id"];
+  res.render("urls_index", { urls: urlDatabase, user: users[user_id] })
 });
 
 app.get("/urls/new", (req, res) => {
-  let username = req.cookies["username"];
-  res.render("urls_new", {username});
+  const user_id = req.cookies["user_id"];
+  res.render("urls_new", { user: users[user_id] })
 });
 
 app.get("/u/:shortURL", (req, res) => {
@@ -82,12 +108,12 @@ app.get("/u/:shortURL", (req, res) => {
 });
 
 app.get("/urls/:shortURL", (req, res) => {
-  let username = req.cookies["username"];
+  const user_id = req.cookies["user_id"];
   res.render("urls_show",
     {
       shortURL: req.params.shortURL,
       longURL: urlDatabase[req.params.shortURL],
-      username
+      user: users[user_id]
     })
 });
 
