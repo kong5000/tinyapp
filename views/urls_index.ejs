@@ -16,12 +16,17 @@
   <main style="margin: 1em;">
     <h3>My URLs</h3>
     <table class="table">
-      <thead>
-        <tr>
-          <th scope="col">Short URL</th>
-          <th scope="col">Long URL</th>
-        </tr>
-      </thead>
+        <% if(!user) { %>
+          <div>Login or register first!</div>
+        <%} else{ %>
+          <thead>
+            <tr>
+              <th scope="col">Short URL</th>
+              <th scope="col">Long URL</th>
+            </tr>
+          </thead>
+          <a href='/urls/new'>Shorten a URL</a>
+      <%}%>
       <tbody>
         <% for(let url in urls) { %>
         <tr>
@@ -38,7 +43,6 @@
         </tr>
 
         <% } %>
-        <a href='#'>Shorten a URL</a>
       </tbody>
     </table>
   </main>

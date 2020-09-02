@@ -36,6 +36,15 @@ const users = {
     password: "dishwasher-funk"
   }
 }
+const urlsForUser = (id) => {
+  const urls = {};
+  for(const key in urlDatabase){
+    if(urlDatabase[key].userID === id){
+      urls[key] = urlDatabase[key]
+    }
+  }
+  return urls;
+}
 
 const findUserIdByEmail = (email) => {
   for (userId in users) {
@@ -80,14 +89,20 @@ app.post("/urls", (req, res) => {
 });
 
 app.post("/urls/:shortURL/delete", (req, res) => {
-  delete urlDatabase[req.params.shortURL]
+  const userID = req.cookies["user_id"];
+  const urlID = req.params.shortURL;
+  if(urlDatabase[urlID].userID === userID){
+    delete urlDatabase[req.params.shortURL]
+  }
   res.redirect('/urls')
 })
 
 app.post("/urls/:id", (req, res) => {
   const userID = req.cookies["user_id"];
-  const urlID = req.params.id;
-  urlDatabase[urlID] = {longURL: req.body.longURL, userID};
+  const urlID = req.params.shortURL;
+  if(urlDatabase[urlID].userID === userID){
+    urlDatabase[urlID] = {longURL: req.body.longURL, userID};
+  }
 })
 
 app.post("/login", (req, res) => {
@@ -122,7 +137,8 @@ app.get("/", (req, res) => {
 
 app.get("/urls", (req, res) => {
   const user_id = req.cookies["user_id"];
-  res.render("urls_index", { urls: urlDatabase, user: users[user_id] })
+  const urls = urlsForUser(user_id);
+  res.render("urls_index", { urls, user: users[user_id] })
 });
 
 app.get("/urls/new", (req, res) => {
@@ -141,6 +157,10 @@ app.get("/u/:shortURL", (req, res) => {
 
 app.get("/urls/:shortURL", (req, res) => {
   const user_id = req.cookies["user_id"];
+  const shortURL = req.params.shortURL;
+  if(!user_id || urlDatabase[shortURL].userID !== user_id){
+    return res.render("urls_show",{ user: null});
+  }
   res.render("urls_show",
     {
       shortURL: req.params.shortURL,
