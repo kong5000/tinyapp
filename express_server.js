@@ -5,13 +5,13 @@ const bodyParser = require("body-parser");
 const cookieParser = require('cookie-parser')
 const STRING_LENGTH = 6;
 app.use(cookieParser())
-app.use(bodyParser.urlencoded({extended: true}));
+app.use(bodyParser.urlencoded({ extended: true }));
 
 function generateRandomString() {
   let alphaNumeric = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890"
   let randomIndex;
   let string = ""
-  for(let i = 0; i < STRING_LENGTH; i++){
+  for (let i = 0; i < STRING_LENGTH; i++) {
     randomIndex = Math.floor(Math.random() * alphaNumeric.length)
     string += alphaNumeric[randomIndex];
   }
@@ -24,23 +24,40 @@ const urlDatabase = {
   "9sm5xK": "http://www.google.com"
 };
 
-const users = { 
+const users = {
   "userRandomID": {
-    id: "userRandomID", 
-    email: "user@example.com", 
+    id: "userRandomID",
+    email: "user@example.com",
     password: "purple-monkey-dinosaur"
   },
- "user2RandomID": {
-    id: "user2RandomID", 
-    email: "user2@example.com", 
+  "user2RandomID": {
+    id: "user2RandomID",
+    email: "user2@example.com",
     password: "dishwasher-funk"
   }
+}
+
+const emailAlreadyExists = (email) => {
+  for (userId in users) {
+    if (users[userId].email === email) {
+      return true;
+    }
+  }
+  return false;
 }
 
 app.set("view engine", "ejs")
 
 app.post("/register", (req, res) => {
-  const {email, password} = req.body;
+  const { email, password } = req.body;
+  if (!email || !password) {
+    return res.status(400).send("empty email or password field")
+  }
+
+  if (emailAlreadyExists(email)) {
+    return res.status(400).send("email already registered")
+  }
+
   const id = generateRandomString();
   const newUser = {
     id,
@@ -48,6 +65,7 @@ app.post("/register", (req, res) => {
     password
   }
   users[id] = newUser
+  console.log(users)
   res.cookie("user_id", id)
   res.redirect("/urls")
 })
