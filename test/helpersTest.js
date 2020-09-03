@@ -20,12 +20,12 @@ describe('getUserByEmail', function() {
     const user = getUserByEmail("user@example.com", testUsers)
     const expectedOutput = "userRandomID";
     // Write your assert statement here
-    assert.equal(expectedOutput, user)
+    assert.equal(expectedOutput, user);
   });
   it('should return undefined if email does not exist in database', function() {
     const user = getUserByEmail("doesNotExist@example.com", testUsers)
     const expectedOutput = undefined;
     // Write your assert statement here
-    assert.equal(expectedOutput, user)
+    assert.equal(expectedOutput, user);
   });
 });
