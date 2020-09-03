@@ -95,10 +95,6 @@ app.get("/register", (req, res) => {
   res.render("registration", { user: null })
 })
 
-app.get("/", (req, res) => {
-  res.send("Hello!");
-});
-
 app.get("/urls", (req, res) => {
   const user_id = req.session.user_id;
   console.log(user_id, "USER ID FROM COOKIE")
@@ -132,11 +128,6 @@ app.get("/urls/:shortURL", (req, res) => {
       longURL: urlDatabase[req.params.shortURL].longURL,
       user: users[user_id]
     })
-});
-
-
-app.get("/hello", (req, res) => {
-  res.send("<html><body>Hello <b>World</b></body></html>\n");
 });
 
 app.listen(PORT, () => {
