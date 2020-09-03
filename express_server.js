@@ -3,8 +3,8 @@ const app = express();
 const bcrypt = require('bcrypt');
 const PORT = 8080; // default port 8080
 const bodyParser = require("body-parser");
-const cookieParser = require('cookie-parser');
 const cookieSession = require('cookie-session');
+const {getUserByEmail} = require('./helpers')
 
 const STRING_LENGTH = 6;
 app.use(cookieSession({
@@ -53,15 +53,6 @@ const urlsForUser = (id) => {
   return urls;
 }
 
-const findUserIdByEmail = (email) => {
-  for (userId in users) {
-    if (users[userId].email === email) {
-      return userId;
-    }
-  }
-  return false;
-}
-
 app.set("view engine", "ejs")
 
 app.post("/register", (req, res) => {
@@ -70,7 +61,7 @@ app.post("/register", (req, res) => {
     return res.status(400).send("empty email or password field")
   }
 
-  if (findUserIdByEmail(email)) {
+  if (getUserByEmail(email, users)) {
     return res.status(400).send("email already registered")
   }
 
@@ -114,7 +105,7 @@ app.post("/urls/:shortURL", (req, res) => {
 
 app.post("/login", (req, res) => {
   const { email, password } = req.body
-  const userId = findUserIdByEmail(email);
+  const userId = getUserByEmail(email);
   if(!userId){
     return res.status(403).send("Invalid credentials")
   }
@@ -127,7 +118,7 @@ app.post("/login", (req, res) => {
 })
 
 app.post("/logout", (req, res) => {
-  res.clearCookie('user_id')
+  req.session = null;
   res.redirect('/urls')
 })
 
