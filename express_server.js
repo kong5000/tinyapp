@@ -1,59 +1,23 @@
+const PORT = 8080; // default port 8080
+const urlDatabase = {};
+const users = {};
+
 const express = require("express");
 const app = express();
 const bcrypt = require('bcrypt');
-const PORT = 8080; // default port 8080
 const bodyParser = require("body-parser");
 const cookieSession = require('cookie-session');
-const {getUserByEmail} = require('./helpers')
 
-const STRING_LENGTH = 6;
+const { getUserByEmail, generateRandomString, getUrlsForUser } = require('./helpers');
+
+app.set("view engine", "ejs")
+
 app.use(cookieSession({
   name: 'session',
   keys: ['secret']
-}))
+}));
 
 app.use(bodyParser.urlencoded({ extended: true }));
-
-function generateRandomString() {
-  let alphaNumeric = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890"
-  let randomIndex;
-  let string = ""
-  for (let i = 0; i < STRING_LENGTH; i++) {
-    randomIndex = Math.floor(Math.random() * alphaNumeric.length)
-    string += alphaNumeric[randomIndex];
-  }
-  return string
-}
-
-
-const urlDatabase = {
-  "b2xVn2": {longURL: "http://www.lighthouselabs.ca", userID: "testuser1"},
-  "9sm5xK": {longURL: "http://www.google.com", userID: "testuser2"}
-};
-
-const users = {
-  "userRandomID": {
-    id: "userRandomID",
-    email: "user@example.com",
-    password: "purple-monkey-dinosaur"
-  },
-  "user2RandomID": {
-    id: "user2RandomID",
-    email: "user2@example.com",
-    password: "dishwasher-funk"
-  }
-}
-const urlsForUser = (id) => {
-  const urls = {};
-  for(const key in urlDatabase){
-    if(urlDatabase[key].userID === id){
-      urls[key] = urlDatabase[key]
-    }
-  }
-  return urls;
-}
-
-app.set("view engine", "ejs")
 
 app.post("/register", (req, res) => {
   const { email, password } = req.body;
@@ -81,14 +45,14 @@ app.post("/urls", (req, res) => {
   console.log(urlDatabase)
   let shortURL = generateRandomString();
   const userID = req.session.user_id;
-  urlDatabase[shortURL] = {longURL: req.body.longURL, userID};
+  urlDatabase[shortURL] = { longURL: req.body.longURL, userID };
   res.redirect(`/urls/${shortURL}`)
 });
 
 app.post("/urls/:shortURL/delete", (req, res) => {
   const userID = req.session.user_id;
   const urlID = req.params.shortURL;
-  if(urlDatabase[urlID].userID === userID){
+  if (urlDatabase[urlID].userID === userID) {
     delete urlDatabase[req.params.shortURL]
   }
   res.redirect('/urls')
@@ -97,22 +61,23 @@ app.post("/urls/:shortURL/delete", (req, res) => {
 app.post("/urls/:shortURL", (req, res) => {
   const userID = req.session.user_id;
   const urlID = req.params.shortURL;
-  if(urlDatabase[urlID].userID === userID){
-    urlDatabase[urlID] = {longURL: req.body.longURL, userID};
+  if (urlDatabase[urlID].userID === userID) {
+    urlDatabase[urlID] = { longURL: req.body.longURL, userID };
   }
   res.redirect('/urls')
 })
 
 app.post("/login", (req, res) => {
   const { email, password } = req.body
-  const userId = getUserByEmail(email);
-  if(!userId){
+  const userId = getUserByEmail(email, users);
+  console.log(email, password)
+  console.log(userId, "userId")
+  if (!userId) {
     return res.status(403).send("Invalid credentials")
   }
-  if(!bcrypt.compareSync(password, users[userId].password)){
+  if (!bcrypt.compareSync(password, users[userId].password)) {
     return res.status(403).send("Invalid credentials")
   }
-  // res.cookie("user_id", userId);
   req.session.user_id = userId;
   res.redirect('/urls')
 })
@@ -135,17 +100,15 @@ app.get("/", (req, res) => {
 });
 
 app.get("/urls", (req, res) => {
-  // const user_id = req.cookies["user_id"];
   const user_id = req.session.user_id;
   console.log(user_id, "USER ID FROM COOKIE")
-  const urls = urlsForUser(user_id);
+  const urls = getUrlsForUser(user_id, urlDatabase);
   res.render("urls_index", { urls, user: users[user_id] })
 });
 
 app.get("/urls/new", (req, res) => {
-  // const user_id = req.cookies["user_id"];
   const user_id = req.session.user_id;
-  if(!user_id){
+  if (!user_id) {
     return res.render("login", { user: null })
   }
   res.render("urls_new", { user: users[user_id] })
@@ -160,8 +123,8 @@ app.get("/u/:shortURL", (req, res) => {
 app.get("/urls/:shortURL", (req, res) => {
   const user_id = req.session.user_id;
   const shortURL = req.params.shortURL;
-  if(!user_id || urlDatabase[shortURL].userID !== user_id){
-    return res.render("urls_show",{ user: null});
+  if (!user_id || urlDatabase[shortURL].userID !== user_id) {
+    return res.render("urls_show", { user: null });
   }
   res.render("urls_show",
     {
