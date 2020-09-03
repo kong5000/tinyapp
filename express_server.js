@@ -42,11 +42,10 @@ app.post("/register", (req, res) => {
 })
 
 app.post("/urls", (req, res) => {
-  console.log(urlDatabase)
   let shortURL = generateRandomString();
   const userID = req.session.user_id;
   urlDatabase[shortURL] = { longURL: req.body.longURL, userID };
-  res.redirect(`/urls/${shortURL}`)
+  res.redirect(`/urls/${shortURL}`);
 });
 
 app.post("/urls/:shortURL/delete", (req, res) => {
@@ -70,8 +69,6 @@ app.post("/urls/:shortURL", (req, res) => {
 app.post("/login", (req, res) => {
   const { email, password } = req.body
   const userId = getUserByEmail(email, users);
-  console.log(email, password)
-  console.log(userId, "userId")
   if (!userId) {
     return res.status(403).send("Invalid credentials")
   }
@@ -97,7 +94,6 @@ app.get("/register", (req, res) => {
 
 app.get("/urls", (req, res) => {
   const user_id = req.session.user_id;
-  console.log(user_id, "USER ID FROM COOKIE")
   const urls = getUrlsForUser(user_id, urlDatabase);
   res.render("urls_index", { urls, user: users[user_id] })
 });
@@ -131,6 +127,6 @@ app.get("/urls/:shortURL", (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`Example app listening on port ${PORT}!`);
+  console.log(`App listening on port ${PORT}!`);
 });
 
