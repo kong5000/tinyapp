@@ -1,5 +1,6 @@
 const express = require("express");
 const app = express();
+const bcrypt = require('bcrypt');
 const PORT = 8080; // default port 8080
 const bodyParser = require("body-parser");
 const cookieParser = require('cookie-parser')
@@ -68,10 +69,11 @@ app.post("/register", (req, res) => {
   }
 
   const id = generateRandomString();
+  const hashedPassword = bcrypt.hashSync(password, 10)
   const newUser = {
     id,
     email,
-    password
+    password: hashedPassword
   }
   users[id] = newUser
   console.log(users)
@@ -111,7 +113,7 @@ app.post("/login", (req, res) => {
   if(!userId){
     return res.status(403).send("Invalid credentials")
   }
-  if(users[userId].password !== password){
+  if(!bcrypt.compareSync(password, users[userId].password)){
     return res.status(403).send("Invalid credentials")
   }
   res.cookie("user_id", userId);
